@@ -20,9 +20,6 @@ public class MemberRequestDto {
 
     private String nickname;
     private char gender;
-    private LocalDate birthDate;
-    private String residence;
-    private String profile_image;
 
 
     //변환 메서드는 역시 따로 매퍼 클래스를 만들어서 구현하는것이 좋은지
@@ -35,9 +32,6 @@ public class MemberRequestDto {
                 .password(passwordEncoder.encode(password))
                 .nickname(nickname)
                 .gender(gender)
-                .birthDate(birthDate)
-                .residence(residence)
-                .profileImage(profile_image)
                 .build();
     }
 

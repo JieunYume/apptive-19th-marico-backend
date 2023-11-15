@@ -1,10 +1,11 @@
-package com.apptive.marico.service;
+package com.apptive.marico.service.auth;
 
 import com.apptive.marico.dto.LoginDto;
 import com.apptive.marico.dto.token.TokenRequestDto;
 import com.apptive.marico.dto.token.TokenResponseDto;
 import com.apptive.marico.entity.token.RefreshToken;
 import com.apptive.marico.jwt.TokenProvider;
+import com.apptive.marico.repository.MemberRepository;
 import com.apptive.marico.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ public class UserAuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+
     @Transactional
     public TokenResponseDto login(LoginDto loginDto) {
         // 1. Login ID/PW 를 기반으로 AuthenticationToken 생성

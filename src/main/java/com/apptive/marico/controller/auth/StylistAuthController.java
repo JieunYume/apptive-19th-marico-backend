@@ -1,13 +1,8 @@
 package com.apptive.marico.controller.auth;
 
-import com.apptive.marico.dto.LoginDto;
-import com.apptive.marico.dto.member.MemberRequestDto;
-import com.apptive.marico.dto.member.MemberResponseDto;
 import com.apptive.marico.dto.stylist.StylistRequestDto;
 import com.apptive.marico.dto.stylist.StylistResponseDto;
-import com.apptive.marico.dto.token.TokenRequestDto;
-import com.apptive.marico.dto.token.TokenResponseDto;
-import com.apptive.marico.service.StylistAuthService;
+import com.apptive.marico.service.auth.StylistAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

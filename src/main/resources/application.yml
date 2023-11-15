@@ -7,7 +7,7 @@ spring:
       enabled: true
 
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/marico
+    url: jdbc:mysql://127.0.0.1:3310/marico
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 1234

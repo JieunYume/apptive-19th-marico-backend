@@ -1,31 +1,23 @@
-package com.apptive.marico.service;
+package com.apptive.marico.service.auth;
 
-import com.apptive.marico.dto.LoginDto;
 import com.apptive.marico.dto.member.MemberRequestDto;
 import com.apptive.marico.dto.member.MemberResponseDto;
-import com.apptive.marico.dto.token.TokenRequestDto;
-import com.apptive.marico.dto.token.TokenResponseDto;
 import com.apptive.marico.entity.Member;
 import com.apptive.marico.entity.Role;
-import com.apptive.marico.entity.Stylist;
-import com.apptive.marico.entity.token.RefreshToken;
 import com.apptive.marico.entity.token.VerificationToken;
 import com.apptive.marico.exception.CustomException;
-import com.apptive.marico.jwt.TokenProvider;
 import com.apptive.marico.repository.MemberRepository;
-import com.apptive.marico.repository.RefreshTokenRepository;
 import com.apptive.marico.repository.RoleRepository;
 import com.apptive.marico.repository.VerificationTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.apptive.marico.entity.Role.RoleName.ROLE_MEMBER;
 import static com.apptive.marico.exception.ErrorCode.*;
@@ -45,14 +37,54 @@ public class MemberAuthService {
         Role userRole = roleRepository.findByName(ROLE_MEMBER).orElseThrow(
                 () -> new CustomException(ROLE_NOT_FOUND));
 
-        if (memberRepository.existsByUserId(memberRequestDto.getEmail())) {
-            throw new CustomException(ALREADY_SAVED_EMAIL);
-        }
+        // 유효성 검사
+        validateUserId(memberRequestDto.getUserId());
+        validateEmail(memberRequestDto.getEmail());
+        validatePassword(memberRequestDto.getPassword());
+        validateNickname(memberRequestDto.getNickname());
 
         Member member = memberRequestDto.toMember(passwordEncoder);
         member.setRoles(Collections.singleton(userRole));
 
         return MemberResponseDto.toDto(memberRepository.save(member));
+    }
+
+    public void validateUserId(String userId) {
+        if (memberRepository.existsByUserId(userId)) {
+            throw new CustomException(ALREADY_SAVED_ID);
+        }
+
+        Pattern userIdPattern = Pattern.compile("^[a-z0-9]{6,20}$");
+        Matcher userIdMatcher = userIdPattern.matcher(userId);
+        if (!userIdMatcher.matches()) {
+            throw new CustomException(INVALID_ID);
+        }
+    }
+
+    public void validateEmail(String email) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new CustomException(ALREADY_SAVED_EMAIL);
+        }
+    }
+
+    public void validatePassword(String password) {
+        Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,20}$");
+        Matcher passwordMatcher = passwordPattern.matcher(password);
+        if (!passwordMatcher.matches()) {
+            throw new CustomException(INVALID_PASSWORD);
+        }
+    }
+
+    public void validateNickname(String nickname) {
+        if (memberRepository.existsByNickname(nickname)) {
+            throw new CustomException(ALREADY_SAVED_NICKNAME);
+        }
+
+        Pattern nicknamePattern = Pattern.compile("^[가-힣a-z0-9]{2,10}$");
+        Matcher nicknameMatcher = nicknamePattern.matcher(nickname);
+        if (!nicknameMatcher.matches()) {
+            throw new CustomException(INVALID_NICKNAME);
+        }
     }
 
     public String changePassword(Member member, String password, String code) throws Exception{
