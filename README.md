@@ -3,7 +3,33 @@
 ## 📌 프로젝트 소개
 
 - 패션에 관심 있지만 스타일링은 미흡한 20대 남성에게
-- 👉스타일리스트 매칭을 통한 개인 맞춤형 스타일링 제공
+- 👉스타일리스트 매칭을 통한 개인 맞춤형 스타일링 제공'
+
+## 팀원
+- 기획 : 박현진
+- 디자인 : 조영우 천후민
+- 개발(FE) : 이세형 채기중
+- 개발(BE) : 박준형 이지은
+
+## 주요 화면 소개
+### 회원가입
+https://github.com/user-attachments/assets/9157ee92-7fa7-417c-bdb2-c1b2c4c3f5bc
+
+### 아이디/비번 찾기
+https://github.com/user-attachments/assets/946d8918-0856-450b-9547-4a18b8b68f11
+
+### 로그인
+https://github.com/user-attachments/assets/62348d2f-5920-4b61-87ad-dcfb3cb80afd
+
+### 스타일리스트 추천/탐색 및 서비스 신청
+https://github.com/user-attachments/assets/bbda18a7-e367-45a1-bc09-f8e20361abea
+
+### 프로필 관리(고객)
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/b79fc0e4-2e13-430a-b572-31c06a28d84e" />
+
+### 프로필 관리(스타일리스트)
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/f25d8f0f-52ce-41d5-8a7e-153ad29aea60" />
+
 
 ## ⏰ 개발 기간
 2023.09 ~ 2024.01
