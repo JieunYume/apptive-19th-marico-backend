@@ -1,32 +1,6 @@
 version: '3.8'
 
 services:
-  db:
-    image: mysql:8.0
-    container_name: db
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - monitoring
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "--password=${MYSQL_PASSWORD}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s  # 컨테이너 시작 후 30초 동안은 실패를 무시
-    deploy:
-      resources:
-        limits:
-          cpus: "2"  # 최대 2개의 코어 할당
-          memory: 2GB   # 최대 2GB 메모리 할당
-
   app:
     build: .
     container_name: spring-app
@@ -54,10 +28,8 @@ services:
           cpus: '0.5'
           memory: 512M
     depends_on:
-      db:
-        condition: service_healthy  # MySQL의 health check가 성공할 때까지 대기
       redis:
-        condition: service_started  # Redis가 시작되면 바로 시작
+        condition: service_started
     networks:
       - monitoring
 
@@ -125,7 +97,6 @@ services:
 
 
 volumes:
-  mysql_data:
   grafana_data:
   redis_data:
 
