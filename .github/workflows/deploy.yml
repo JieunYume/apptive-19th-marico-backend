@@ -48,40 +48,8 @@ jobs:
       - name: Deploy to EC2 using SSM
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
-          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          JWT_SECRET_CLEAN=$(echo -n "$JWT_SECRET" | tr -d '\n')
-
-          DB_URL="jdbc:mysql://${RDS_ENDPOINT}/portfolio?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true"
-          IMAGE="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          COMMANDS=$(jq -n \
-            --arg stop "docker stop portfolio-app || true" \
-            --arg rm "docker rm portfolio-app || true" \
-            --arg login "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${REGISTRY}" \
-            --arg db_url "$DB_URL" \
-            --arg rds_pw "$RDS_PASSWORD" \
-            --arg jwt "$JWT_SECRET_CLEAN" \
-            --arg mail_pw "$MAIL_PASSWORD" \
-            --arg access_key "$AWS_ACCESS_KEY" \
-            --arg secret_key "$AWS_SECRET_KEY" \
-            --arg image "$IMAGE" \
-            '{
-              "commands": [
-                $stop,
-                $rm,
-                $login,
-                ("docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=\"-Xmx256m\" -e \"SPRING_DATASOURCE_URL=" + $db_url + "\" -e \"SPRING_DATASOURCE_PASSWORD=" + $rds_pw + "\" -e \"JWT_SECRET=" + $jwt + "\" -e \"SPRING_MAIL_PASSWORD=" + $mail_pw + "\" -e \"CLOUD_AWS_CREDENTIALS_ACCESSKEY=" + $access_key + "\" -e \"CLOUD_AWS_CREDENTIALS_SECRETKEY=" + $secret_key + "\" " + $image)
-              ]
-            }')
-
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters "$COMMANDS"
+            --parameters '{"commands": ["docker stop portfolio-app || true", "docker rm portfolio-app || true", "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}", "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} -e JWT_SECRET=${{ secrets.JWT_SECRET }} -e SPRING_MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} -e CLOUD_AWS_CREDENTIALS_ACCESSKEY=${{ secrets.AWS_ACCESS_KEY_ID }} -e CLOUD_AWS_CREDENTIALS_SECRETKEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"]}'
