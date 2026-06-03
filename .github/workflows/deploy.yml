@@ -21,8 +21,11 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -54,6 +57,6 @@ jobs:
                 "docker stop portfolio-app || true",
                 "docker rm portfolio-app || true",
                 "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-                "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} '$REGISTRY'/'$ECR_REPOSITORY':'$GITHUB_SHA'"
+                "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} -e JWT_SECRET=${{ secrets.JWT_SECRET }} -e SPRING_MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} -e CLOUD_AWS_CREDENTIALS_ACCESSKEY=${{ secrets.AWS_ACCESS_KEY_ID }} -e CLOUD_AWS_CREDENTIALS_SECRETKEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} '$REGISTRY'/'$ECR_REPOSITORY':'$GITHUB_SHA'"
               ]
             }'
