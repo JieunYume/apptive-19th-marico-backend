@@ -55,11 +55,12 @@ jobs:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
+          JWT_SECRET_CLEAN=$(echo -n "$JWT_SECRET" | tr -d '\n')
           COMMANDS=$(jq -n \
             --arg stop "docker stop portfolio-app || true" \
             --arg rm "docker rm portfolio-app || true" \
             --arg login "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $REGISTRY" \
-            --arg run "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://$RDS_ENDPOINT/portfolio?useSSL=false\&serverTimezone=Asia/Seoul\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=$RDS_PASSWORD -e JWT_SECRET=$JWT_SECRET -e SPRING_MAIL_PASSWORD=$MAIL_PASSWORD -e CLOUD_AWS_CREDENTIALS_ACCESSKEY=$AWS_ACCESS_KEY -e CLOUD_AWS_CREDENTIALS_SECRETKEY=$AWS_SECRET_KEY $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" \
+            --arg run "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://$RDS_ENDPOINT/portfolio?useSSL=false\&serverTimezone=Asia/Seoul\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=$RDS_PASSWORD -e JWT_SECRET=$JWT_SECRET_CLEAN -e SPRING_MAIL_PASSWORD=$MAIL_PASSWORD -e CLOUD_AWS_CREDENTIALS_ACCESSKEY=$AWS_ACCESS_KEY -e CLOUD_AWS_CREDENTIALS_SECRETKEY=$AWS_SECRET_KEY $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" \
             '{"commands": [$stop, $rm, $login, $run]}')
 
           aws ssm send-command \
