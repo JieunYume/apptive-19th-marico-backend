@@ -64,6 +64,10 @@ dependencies {
 	// JAXB
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
 
+	// Actuator & Prometheus
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
 }
 
 tasks.named('test') {

@@ -52,6 +52,7 @@ public class SecurityConfig {
             .authorizeHttpRequests()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/api/**").permitAll()
+            .requestMatchers("/actuator/**").permitAll()
 
             .and()
             .apply(new JwtSecurityConfig(tokenProvider));
