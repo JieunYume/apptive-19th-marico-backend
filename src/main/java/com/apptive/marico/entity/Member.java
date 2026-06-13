@@ -57,7 +57,7 @@ public class Member implements UserDetails {
     private String profileImage;
 
     @OneToMany(mappedBy = "member", orphanRemoval = true)
-    private List<NoticeReadStatus> noticeReadStatuses = new ArrayList<>();
+    private List<MemberNoticeReadStatus> noticeReadStatuses = new ArrayList<>();
 
     private String height; // 필수
 
@@ -71,6 +71,9 @@ public class Member implements UserDetails {
 
     @OneToOne(mappedBy = "member")
     private ServiceApplication serviceApplication;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    private List<Order> orders = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(

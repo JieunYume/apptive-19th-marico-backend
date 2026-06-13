@@ -22,6 +22,7 @@ gradle-app.setting
 .classpath
 
 application-db.yml
+application-db-local.yml
 application-jwt-secret.yml
 application-s3.yml
 application-mail.yml

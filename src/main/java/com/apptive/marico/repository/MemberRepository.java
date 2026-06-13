@@ -16,7 +16,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     boolean existsByEmail(String email);
     boolean existsByNickname(String nickname);
 
-    @Query("SELECT m FROM Member m LEFT JOIN FETCH m.noticeReadStatuses WHERE m.userId = :userId")
+    @Query("SELECT m FROM Member m LEFT JOIN FETCH m.noticeReadStatuses nrs LEFT JOIN FETCH nrs.notice WHERE m.userId = :userId")
     Optional<Member> findByUserIdWithNoticeReadStatus(String userId);
 
 

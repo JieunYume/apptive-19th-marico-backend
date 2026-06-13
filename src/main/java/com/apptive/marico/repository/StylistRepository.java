@@ -22,7 +22,7 @@ public interface StylistRepository extends JpaRepository<Stylist,Long> {
 
     @Query("SELECT s FROM Stylist s LEFT JOIN FETCH s.styles")
     List<Stylist> findAllWithStyle();
-    @Query("SELECT s FROM Stylist s LEFT JOIN FETCH s.noticeReadStatuses WHERE s.userId = :userId")
+    @Query("SELECT s FROM Stylist s LEFT JOIN FETCH s.noticeReadStatuses nrs LEFT JOIN FETCH nrs.notice WHERE s.userId = :userId")
     Optional<Stylist> findByUserIdWithNoticeReadStatus(String userId);
 
     @Query("SELECT DISTINCT s FROM Stylist s LEFT JOIN FETCH s.stylistServices WHERE s.id = :stylistId")

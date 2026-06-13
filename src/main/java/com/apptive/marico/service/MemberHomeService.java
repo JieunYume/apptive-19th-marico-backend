@@ -33,7 +33,7 @@ public class MemberHomeService {
 
         // 모든 스타일리스트를 가져온다.
         List<Stylist> allStylists = stylistRepository.findAll();
-        System.out.println(allStylists.size());
+        if(allStylists.isEmpty()) return List.of();
 
         // 각 스타일리스트에 대해 점수를 계산하고, 이를 기준으로 정렬한다.
         List<Stylist> sortedStylists = allStylists.stream()

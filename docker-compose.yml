@@ -17,7 +17,7 @@ services:
       CLOUD_AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       CLOUD_AWS_CREDENTIALS_ACCESSKEY: ${AWS_S3_ACCESS_KEY}
       CLOUD_AWS_CREDENTIALS_SECRETKEY: ${AWS_S3_SECRET_KEY}
-      CLOUD_AWS_STACK_AUTO: "false"
+      CLOUD_AWS_STACK_AUTO: "false"ㅇ
       JAVA_OPTS: "-Xms256m -Xmx512m"
     deploy:
       resources:

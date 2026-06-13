@@ -29,5 +29,8 @@ public class Notice {
     private LocalDateTime createDate;
 
     @OneToMany(mappedBy = "notice", cascade = CascadeType.REMOVE)
-    private List<NoticeReadStatus> noticeReadStatusList = new ArrayList<>();
+    private List<MemberNoticeReadStatus> memberNoticeReadStatuses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "notice", cascade = CascadeType.REMOVE)
+    private List<StylistNoticeReadStatus> stylistNoticeReadStatuses = new ArrayList<>();
 }

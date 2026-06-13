@@ -76,7 +76,7 @@ public class Stylist implements UserDetails {
     private List<Style> styles = new ArrayList<>();
 
     @OneToMany(mappedBy = "stylist", orphanRemoval = true)
-    private List<NoticeReadStatus> noticeReadStatuses = new ArrayList<>();
+    private List<StylistNoticeReadStatus> noticeReadStatuses = new ArrayList<>();
 
     @OneToMany(mappedBy = "stylist", orphanRemoval = true)
     private List<StylistService> stylistServices = new ArrayList<>();
