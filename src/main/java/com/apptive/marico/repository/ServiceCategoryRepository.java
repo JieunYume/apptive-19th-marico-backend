@@ -1,15 +1,14 @@
 package com.apptive.marico.repository;
 
-import com.apptive.marico.entity.ServiceCategory;
-import com.apptive.marico.entity.Stylist;
-import com.apptive.marico.entity.StylistService;
+import com.apptive.marico.entity.service.ServiceContent;
+import com.apptive.marico.entity.service.Service;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-public interface ServiceCategoryRepository extends JpaRepository<ServiceCategory, Long> {
+public interface ServiceCategoryRepository extends JpaRepository<ServiceContent, Long> {
 
     @Modifying
-    @Query("DELETE FROM ServiceCategory s WHERE s.stylistService = :stylistService")
-    void deleteAllByStylistService(StylistService stylistService);
+    @Query("DELETE FROM ServiceContent s WHERE s.stylistService = :stylistService")
+    void deleteAllByStylistService(Service stylistService);
 }

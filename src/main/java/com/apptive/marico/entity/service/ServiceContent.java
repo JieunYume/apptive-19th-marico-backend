@@ -1,4 +1,4 @@
-package com.apptive.marico.entity;
+package com.apptive.marico.entity.service;
 
 
 import jakarta.persistence.*;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServiceCategory {
+public class ServiceContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,7 +25,7 @@ public class ServiceCategory {
 
     private String categoryDescription;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
-    private StylistService stylistService;
+    private Service stylistService;
 }

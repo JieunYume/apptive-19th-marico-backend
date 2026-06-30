@@ -3,16 +3,15 @@ package com.apptive.marico.service;
 import com.apptive.marico.dto.stylistService.InquiryDto;
 import com.apptive.marico.dto.stylistService.InquiryPreviewDto;
 import com.apptive.marico.entity.Member;
-import com.apptive.marico.entity.ServiceInquiry;
+import com.apptive.marico.entity.service.ServiceInquiry;
 import com.apptive.marico.entity.Stylist;
-import com.apptive.marico.entity.StylistService;
+import com.apptive.marico.entity.service.Service;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.repository.InquiryRepository;
 import com.apptive.marico.repository.MemberRepository;
 import com.apptive.marico.repository.StylistRepository;
-import com.apptive.marico.repository.StylistServiceRepository;
+import com.apptive.marico.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,20 +21,20 @@ import java.util.stream.Collectors;
 
 import static com.apptive.marico.exception.ErrorCode.*;
 
-@Service
+@org.springframework.stereotype.Service
 @Transactional
 @RequiredArgsConstructor
 public class InquiryService {
 
     private final MemberRepository memberRepository;
     private final InquiryRepository inquiryRepository;
-    private final StylistServiceRepository stylistServiceRepository;
+    private final ServiceRepository stylistServiceRepository;
     private final StylistRepository stylistRepository;
     private final ImageUploadService imageUploadService;
     public String addInquiry(String userId, List<MultipartFile> image, InquiryDto inquiryDto) {
         Member member = memberRepository.findByUserId(userId)
                             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-        StylistService stylistService = stylistServiceRepository.findById(inquiryDto.getService_id())
+        Service stylistService = stylistServiceRepository.findById(inquiryDto.getService_id())
                                             .orElseThrow(() -> new CustomException(SERVICE_NOT_FOUND));
         List<String> img = imageUploadService.upload(image);
         inquiryRepository.save(ServiceInquiry.builder()
@@ -80,7 +79,7 @@ public class InquiryService {
         return InquiryDto.toDto(serviceInquiry);
     }
     public InquiryDto loadStylistInquiry(String userId, Long inquiryId) {
-        List<StylistService> stylistServiceList = stylistServiceRepository.findAllByStylistUserId(userId);
+        List<Service> stylistServiceList = stylistServiceRepository.findAllByStylistUserId(userId);
         ServiceInquiry serviceInquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new CustomException(INQUIRY_NOT_FOUND));
         isMatchInquiryWithStylist(stylistServiceList, serviceInquiry);
@@ -88,7 +87,7 @@ public class InquiryService {
     }
 
     public String addInquiryAnswer(String userId, Long inquiry_id, String responseContent, List<MultipartFile> answerImgs) {
-        List<StylistService> stylistServiceList= stylistServiceRepository.findAllByStylistUserId(userId);
+        List<Service> stylistServiceList= stylistServiceRepository.findAllByStylistUserId(userId);
 
         ServiceInquiry serviceInquiry = inquiryRepository.findById(inquiry_id)
                 .orElseThrow(() -> new CustomException(INQUIRY_NOT_FOUND));
@@ -100,9 +99,9 @@ public class InquiryService {
         return "답변이 등록되었습니다.";
     }
 
-    private void isMatchInquiryWithStylist(List<StylistService> stylistServiceList, ServiceInquiry serviceInquiry) {
+    private void isMatchInquiryWithStylist(List<Service> stylistServiceList, ServiceInquiry serviceInquiry) {
 
-        StylistService stylistService = serviceInquiry.getStylistService();
+        Service stylistService = serviceInquiry.getStylistService();
         if (!stylistServiceList.contains(stylistService)) throw new CustomException(USER_AND_INQUIRY_NOT_MATCH);
     }
 }

@@ -1,32 +1,35 @@
 package com.apptive.marico.dto.stylist.service;
 
-
-
-import com.apptive.marico.entity.StylistService;
+import com.apptive.marico.entity.service.Service;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class StylistServiceDto {
     private Long service_id;
     private String serviceName;
     private String serviceDescription;
-
-    private ServiceCategoryDto serviceCategoryDto;
+    private List<ServiceCategoryDto> serviceCategories;
     private int price;
 
-    public static StylistServiceDto toDto(StylistService stylistService) {
+    public static StylistServiceDto toDto(Service stylistService) {
+        List<ServiceCategoryDto> categoryDtos = stylistService.getServiceCategories().stream()
+                .map(ServiceCategoryDto::toDto)
+                .collect(Collectors.toList());
 
-        ServiceCategoryDto categoryDto = ServiceCategoryDto.toDto(stylistService.getServiceCategory());
         return StylistServiceDto.builder()
                 .service_id(stylistService.getId())
                 .serviceName(stylistService.getServiceName())
                 .serviceDescription(stylistService.getServiceDescription())
-                .serviceCategoryDto(categoryDto)
+                .serviceCategories(categoryDtos)
                 .price(stylistService.getPrice())
                 .build();
     }

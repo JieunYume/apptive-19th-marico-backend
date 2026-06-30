@@ -1,6 +1,7 @@
-package com.apptive.marico.entity;
+package com.apptive.marico.entity.service;
 
 import com.apptive.marico.dto.stylist.service.StylistServiceDto;
+import com.apptive.marico.entity.Stylist;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Table(name = "services")
-public class StylistService {
+public class Service {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "service_id")
@@ -25,8 +26,8 @@ public class StylistService {
 
     private int price;
 
-    @OneToOne(mappedBy = "stylistService", cascade = CascadeType.REMOVE)
-    private ServiceCategory serviceCategory;
+    @OneToMany(mappedBy = "stylistService", cascade = CascadeType.REMOVE)
+    private List<ServiceContent> serviceCategories = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stylist_id")

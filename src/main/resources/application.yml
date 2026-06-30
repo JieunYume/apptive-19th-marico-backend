@@ -4,6 +4,7 @@ spring:
       - optional:classpath:/application-jwt-secret.yml
       - optional:classpath:/application-s3.yml
       - optional:classpath:/application-mail.yml
+      - optional:classpath:/application-kakaopay.yml
   mail:
     host: smtp.gmail.com
     port: 587

@@ -7,6 +7,7 @@ import com.apptive.marico.dto.stylist.DeleteStyleDto;
 import com.apptive.marico.dto.stylist.StyleDto;
 import com.apptive.marico.dto.stylist.StylistMypageDto;
 import com.apptive.marico.dto.stylist.StylistMypageEditDto;
+import com.apptive.marico.dto.stylist.service.ServiceMatchingApproveDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceDto;
 import com.apptive.marico.dto.verificationToken.SendEmailResponseDto;
 import com.apptive.marico.service.StylistMypageService;
@@ -63,6 +64,11 @@ public class StylistMypageController {
         return ResponseEntity.ok(ApiUtils.success(stylistMypageService.editService(principal.getName(), service_id, stylistServiceDto)));
     }
 
+    @DeleteMapping("/stylist-service/{service_id}")
+    public ResponseEntity<?> deleteService(Principal principal, @PathVariable("service_id") Long service_id) {
+        return ResponseEntity.ok(ApiUtils.success(stylistMypageService.deleteService(principal.getName(), service_id)));
+    }
+
     @GetMapping("/style")
     public ResponseEntity<?> getMyStyle(Principal principal) {
         return ResponseEntity.ok(stylistMypageService.getStyle(principal.getName()));
@@ -111,6 +117,11 @@ public class StylistMypageController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteStylist(Principal principal) {
         return ResponseEntity.ok(new ApiUtils.ApiSuccess<>(stylistMypageService.deleteStylist(principal.getName())));
+    }
+
+    @PatchMapping("/matching/{matchingId}/approve")
+    public ResponseEntity<?> approveMatching(Principal principal, @PathVariable Long matchingId, @RequestBody ServiceMatchingApproveDto dto) {
+        return ResponseEntity.ok(ApiUtils.success(stylistMypageService.approveMatching(principal.getName(), matchingId, dto)));
     }
 
     @GetMapping("/account")

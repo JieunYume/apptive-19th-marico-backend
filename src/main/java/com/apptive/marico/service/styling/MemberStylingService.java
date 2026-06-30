@@ -3,6 +3,7 @@ package com.apptive.marico.service.styling;
 import com.apptive.marico.dto.styling.MemberBasicInformationDto;
 import com.apptive.marico.dto.styling.PersonalStylistDto;
 import com.apptive.marico.entity.*;
+import com.apptive.marico.entity.service.ServiceMatching;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static com.apptive.marico.exception.ErrorCode.*;
 
@@ -23,20 +23,17 @@ public class MemberStylingService {
     private final StyleRepository styleRepository;
     private final MyStyleRepository myStyleRepository;
     private final ReferenceImageRepository referenceImageRepository;
-    private final ServiceApplicationRepository serviceApplicationRepository;
+    private final ServiceMatchingRepository orderServiceRepository;
 
     @Transactional
     public PersonalStylistDto findPersonalStylist(String userId) {
         Member member = memberRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
 
-        ServiceApplication serviceApplication = serviceApplicationRepository.findByMember(member).orElseThrow(
-                () -> new CustomException(NO_PERSONAL_STYLIST));
+        ServiceMatching matching = orderServiceRepository.findFirstByMemberAndApprovalStatusOrderByIdDesc(member, "DONE")
+                .orElseThrow(() -> new CustomException(NO_PERSONAL_STYLIST));
 
-        if (serviceApplication.getApprovalStatus().equals("DONE")) {
-            return PersonalStylistDto.toDto(serviceApplication.getStylistService().getStylist());
-        } else
-            throw new CustomException(NO_PERSONAL_STYLIST);
+        return PersonalStylistDto.toDto(matching.getService().getStylist());
     }
 
 
@@ -46,7 +43,6 @@ public class MemberStylingService {
 
         Member member = memberRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
-
 
         member.setHeight(memberBasicInformationDto.getHeight());
         member.setWeight(memberBasicInformationDto.getWeight());
@@ -69,8 +65,6 @@ public class MemberStylingService {
                     .member(member)
                     .build();
             MyStyle save = myStyleRepository.save(myStyle);
-            System.out.println("$$$$%%%%%%%%%%%%%%%%%%%%%%%%%");
-            System.out.println(save.getImageUrl());
 //            newMyStyles.add(myStyleRepository.save(myStyle));
         }
         member.getMyStyles().clear();

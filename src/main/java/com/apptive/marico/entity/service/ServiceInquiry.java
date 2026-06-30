@@ -1,5 +1,6 @@
-package com.apptive.marico.entity;
+package com.apptive.marico.entity.service;
 
+import com.apptive.marico.entity.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,7 @@ public class ServiceInquiry {
     private String content;
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private StylistService stylistService;
+    private Service stylistService;
 
     @OneToOne
     @JoinColumn(name = "member_id")

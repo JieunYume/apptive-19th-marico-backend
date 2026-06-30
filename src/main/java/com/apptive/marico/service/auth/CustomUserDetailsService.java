@@ -98,10 +98,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public void isUserExist(String userId) {
-        Optional<Member> byUserId = memberRepository.findByUserId(userId);
-        Optional<Stylist> byUserId1 = stylistRepository.findByUserId(userId);
+        Optional<Member> member = memberRepository.findByUserId(userId);
+        Optional<Stylist> stylist = stylistRepository.findByUserId(userId);
 
-        if(byUserId.isEmpty() && byUserId1.isEmpty()) {
+        if(member.isEmpty() && stylist.isEmpty()) {
             throw new CustomException(ID_OR_PASSWORD_NOT_MATCH);
         }
     }

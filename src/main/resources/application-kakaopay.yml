@@ -1,0 +1,7 @@
+kakao:
+  admin-key: ${KAKAO_ADMIN_KEY:}
+  pay:
+    cid: TC0ONETIME
+    approval-url: http://localhost:8080/api/payment/kakao/success
+    fail-url: http://localhost:8080/api/payment/kakao/fail
+    cancel-url: http://localhost:8080/api/payment/kakao/cancel

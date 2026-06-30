@@ -1,0 +1,260 @@
+Table members {
+  member_id bigint [pk, increment]
+  name varchar [not null]
+  email varchar [unique, not null]
+  user_id varchar [unique, not null]
+  password varchar [not null]
+  nickname varchar [not null]
+  gender char [not null]
+  birth_date date
+  city varchar
+  state varchar
+  profile_image varchar
+  height varchar
+  weight varchar
+  bank varchar
+  account_number varchar
+  account_holder varchar
+  body_shape_images varchar
+  note varchar
+  enabled boolean [not null]
+}
+
+Table stylists {
+  stylist_id bigint [pk, increment]
+  name varchar [not null]
+  email varchar [unique, not null]
+  user_id varchar [unique, not null]
+  password varchar [not null]
+  nickname varchar [not null]
+  gender char [not null]
+  birth_date date
+  city varchar
+  state varchar
+  profile_image varchar
+  stage_name varchar
+  one_line_introduction varchar
+  stylist_introduction varchar
+  chat_link varchar
+  bank varchar
+  account_number varchar
+  account_holder varchar
+  enabled boolean [not null]
+}
+
+Table roles {
+  role_id bigint [pk, increment]
+  name varchar(60)
+}
+
+Table members_roles {
+  member_id bigint
+  role_id bigint
+}
+
+Table stylists_roles {
+  stylist_id bigint
+  role_id bigint
+}
+
+Table careers {
+  career_id bigint [pk, increment]
+  organization_name varchar [not null]
+  content varchar [not null]
+  start_year varchar [not null]
+  end_year varchar [not null]
+  stylist_id bigint
+}
+
+Table style {
+  id bigint [pk, increment]
+  image varchar
+  category varchar
+  stylist_id bigint
+}
+
+Table member_style {
+  member_id bigint
+  style_id bigint
+}
+
+Table services {
+  service_id bigint [pk, increment]
+  service_name varchar
+  service_description varchar
+  price int
+  stylist_id bigint
+}
+
+Table service_category {
+  id bigint [pk, increment]
+  service_type varchar
+  connection_type varchar
+  category_description varchar
+  service_id bigint [unique]
+}
+
+Table service_application {
+  id bigint [pk, increment]
+  approval_status varchar [default: 'WAITING']
+  member_id bigint [unique]
+  service_id bigint
+}
+
+Table service_inquiry {
+  id bigint [pk, increment]
+  title varchar
+  content varchar
+  service_id bigint
+  member_id bigint [unique]
+  response_content varchar
+  answer_complete boolean
+}
+
+Table service_inquiry_images {
+  service_inquiry_id bigint
+  inquiry_image varchar
+}
+
+Table response_images {
+  service_inquiry_id bigint
+  response_image varchar
+}
+
+Table stylist_search_cache {
+  stylist_id bigint [pk]
+  profile_image varchar
+  stage_name varchar
+  one_line_introduction varchar
+  city varchar
+  state varchar
+  gender char
+  style_categories varchar
+  like_count bigint [not null, default: 0]
+  order_count bigint [not null, default: 0]
+  score bigint [not null, default: 0]
+  updated_at datetime [not null]
+}
+
+Table notice {
+  id bigint [pk, increment]
+  title varchar
+  content varchar
+  create_date datetime
+}
+
+Table member_notice_read {
+  id bigint [pk, increment]
+  member_id bigint [not null]
+  notice_id bigint [not null]
+  read_status boolean
+}
+
+Table stylist_notice_read {
+  id bigint [pk, increment]
+  stylist_id bigint [not null]
+  notice_id bigint [not null]
+  read_status boolean
+}
+
+Table likes {
+  like_id bigint [pk, increment]
+  member_id bigint
+  stylist_id bigint
+}
+
+Table my_style {
+  id bigint [pk, increment]
+  image_url varchar [not null]
+  member_id bigint
+}
+
+Table reference_image {
+  id bigint [pk, increment]
+  image_url varchar [not null]
+  member_id bigint
+}
+
+Table orders {
+  order_id bigint [pk, increment]
+  member_id bigint [not null]
+  ordered_at datetime [not null]
+  total_price int [not null]
+  status varchar(20) [not null, default: 'PAID']
+}
+
+Table order_services {
+  order_service_id bigint [pk, increment]
+  order_id bigint [not null]
+  service_id bigint [not null]
+  price int [not null]
+}
+
+Table RefreshToken {
+  refresh_key varchar [pk]
+  refresh_value varchar
+}
+
+Table verificationToken {
+  id bigint [pk, increment]
+  verification_code varchar
+  expiry_date datetime
+  email varchar
+}
+
+// members - roles (N:M)
+Ref: members_roles.member_id > members.member_id
+Ref: members_roles.role_id > roles.role_id
+
+// stylists - roles (N:M)
+Ref: stylists_roles.stylist_id > stylists.stylist_id
+Ref: stylists_roles.role_id > roles.role_id
+
+// careers - stylists
+Ref: careers.stylist_id > stylists.stylist_id
+
+// style - stylists
+Ref: style.stylist_id > stylists.stylist_id
+
+// members - style (N:M)
+Ref: member_style.member_id > members.member_id
+Ref: member_style.style_id > style.id
+
+// services - stylists
+Ref: services.stylist_id > stylists.stylist_id
+
+// service_category - services (1:1)
+Ref: service_category.service_id - services.service_id
+
+// service_application - members (1:1), services
+Ref: service_application.member_id - members.member_id
+Ref: service_application.service_id > services.service_id
+
+// service_inquiry - services, members (1:1)
+Ref: service_inquiry.service_id > services.service_id
+Ref: service_inquiry.member_id - members.member_id
+Ref: service_inquiry_images.service_inquiry_id > service_inquiry.id
+Ref: response_images.service_inquiry_id > service_inquiry.id
+
+// member_notice_read - notice, members
+Ref: member_notice_read.notice_id > notice.id
+Ref: member_notice_read.member_id > members.member_id
+
+// stylist_notice_read - notice, stylists
+Ref: stylist_notice_read.notice_id > notice.id
+Ref: stylist_notice_read.stylist_id > stylists.stylist_id
+
+// likes - members, stylists
+Ref: likes.member_id > members.member_id
+Ref: likes.stylist_id > stylists.stylist_id
+
+// my_style, reference_image - members
+Ref: my_style.member_id > members.member_id
+Ref: reference_image.member_id > members.member_id
+
+// orders - members
+Ref: orders.member_id > members.member_id
+
+// order_services - orders, services
+Ref: order_services.order_id > orders.order_id
+Ref: order_services.service_id > services.service_id

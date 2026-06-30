@@ -6,23 +6,24 @@ import com.apptive.marico.dto.styling.payment.PaymentWaitingDeatilDto;
 import com.apptive.marico.dto.styling.payment.PaymentWaitingDto;
 import com.apptive.marico.dto.styling.payment.PaymentWaitingMemberDto;
 import com.apptive.marico.entity.*;
+import com.apptive.marico.entity.service.ServiceMatching;
+import com.apptive.marico.entity.service.Service;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static com.apptive.marico.exception.ErrorCode.*;
 
-@Service
+@org.springframework.stereotype.Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class StylistStylingService {
     private final MemberRepository memberRepository;
     private final StylistRepository stylistRepository;
-    private final ServiceApplicationRepository serviceApplicationRepository;
+    private final ServiceMatchingRepository orderServiceRepository;
 
 
     public MyClientDto findMyClient(String userId) {
@@ -30,11 +31,11 @@ public class StylistStylingService {
                 () -> new CustomException(USER_NOT_FOUND));
 
         List<MyClientMemberDto> myClientDtos = new ArrayList<>();
-        for (StylistService stylistService : stylist.getStylistServices()) {
-            List<ServiceApplication> serviceApplications = serviceApplicationRepository.findByStylistService(stylistService);
-            for (ServiceApplication serviceApplication : serviceApplications) {
-                if (serviceApplication.getApprovalStatus().equals("DONE")) {
-                    myClientDtos.add(MyClientMemberDto.toDto(serviceApplication.getMember()));
+        for (Service stylistService : stylist.getStylistServices()) {
+            List<ServiceMatching> matchings = orderServiceRepository.findByService(stylistService);
+            for (ServiceMatching matching : matchings) {
+                if (matching.getApprovalStatus().equals("DONE")) {
+                    myClientDtos.add(MyClientMemberDto.toDto(matching.getMember()));
                 }
             }
         }
@@ -49,13 +50,13 @@ public class StylistStylingService {
                 () -> new CustomException(USER_NOT_FOUND));
 
         List<PaymentWaitingMemberDto> paymentWaitingMembers = new ArrayList<>();
-        for (StylistService stylistService : stylist.getStylistServices()) {
-            List<ServiceApplication> serviceApplications = serviceApplicationRepository.findByStylistService(stylistService);
-            if (serviceApplications != null) {
-                for (ServiceApplication serviceApplication : serviceApplications) {
-                    if (serviceApplication.getApprovalStatus().equals("WAITING")) {
-                        Member member = serviceApplication.getMember();
-                        paymentWaitingMembers.add(PaymentWaitingMemberDto.toDto(serviceApplication.getId(), member));
+        for (Service stylistService : stylist.getStylistServices()) {
+            List<ServiceMatching> matchings = orderServiceRepository.findByService(stylistService);
+            if (matchings != null) {
+                for (ServiceMatching matching : matchings) {
+                    if (matching.getApprovalStatus().equals("WAITING")) {
+                        Member member = matching.getMember();
+                        paymentWaitingMembers.add(PaymentWaitingMemberDto.toDto(matching.getId(), member));
                     }
                 }
             }
@@ -63,50 +64,50 @@ public class StylistStylingService {
         return PaymentWaitingDto.toDto(paymentWaitingMembers);
     }
 
-    public PaymentWaitingDeatilDto findPaymentWaitingDetail(String userId, long serviceApplicationId) {
+    public PaymentWaitingDeatilDto findPaymentWaitingDetail(String userId, long matchingId) {
         Stylist stylist = stylistRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
 
-        ServiceApplication serviceApplication = serviceApplicationRepository.findById(serviceApplicationId).orElseThrow(
-                () -> new CustomException(SERVICE_APPLICATION_NOT_FOUND));
-        Member member = serviceApplication.getMember();
+        ServiceMatching matching = orderServiceRepository.findById(matchingId).orElseThrow(
+                () -> new CustomException(STYLIST_MATCHING_NOT_FOUND));
+        Member member = matching.getMember();
 
         Set<String> preferredStyleCategoriesSet = new HashSet<>();
         for (Style style : member.getPreferredStyles()) {
             preferredStyleCategoriesSet.add(style.getCategory());
         }
 
-        List<String> preferredStyleCategories = new ArrayList<>(preferredStyleCategoriesSet); // 중복 제거
+        List<String> preferredStyleCategories = new ArrayList<>(preferredStyleCategoriesSet);
 
-        return PaymentWaitingDeatilDto.toDto(serviceApplication.getId(), serviceApplication.getMember(), preferredStyleCategories);
+        return PaymentWaitingDeatilDto.toDto(matching.getId(), matching.getMember(), preferredStyleCategories);
     }
 
     @Transactional
-    public String paymentApproval(String userId, long serviceApplicationId) {
+    public String paymentApproval(String userId, long matchingId) {
         Stylist stylist = stylistRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
 
-        ServiceApplication serviceApplication = serviceApplicationRepository.findById(serviceApplicationId).orElseThrow(
-                () -> new CustomException(SERVICE_APPLICATION_NOT_FOUND));
+        ServiceMatching matching = orderServiceRepository.findById(matchingId).orElseThrow(
+                () -> new CustomException(STYLIST_MATCHING_NOT_FOUND));
 
-        if (serviceApplication.getApprovalStatus().equals("WAITING")) {
-            serviceApplication.approval();
-        } else{
-            throw new CustomException(SERVICE_APPLICATION_NOT_WAITING);
+        if (matching.getApprovalStatus().equals("WAITING")) {
+            matching.approval();
+        } else {
+            throw new CustomException(STYLIST_MATCHING_NOT_WAITING);
         }
         return "결제 승인이 정상적으로 완료되었습니다.";
     }
 
     @Transactional
-    public String paymentDenial(String userId, long serviceApplicationId) {
+    public String paymentDenial(String userId, long matchingId) {
         Stylist stylist = stylistRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
 
-        ServiceApplication serviceApplication = serviceApplicationRepository.findById(serviceApplicationId).orElseThrow(
-                () -> new CustomException(SERVICE_APPLICATION_NOT_FOUND));
+        ServiceMatching matching = orderServiceRepository.findById(matchingId).orElseThrow(
+                () -> new CustomException(STYLIST_MATCHING_NOT_FOUND));
 
-        if (serviceApplication.getApprovalStatus().equals("WAITING")) {
-            serviceApplication.denial();
+        if (matching.getApprovalStatus().equals("WAITING")) {
+            matching.denial();
         }
         return "결제 거절이 정상적으로 완료되었습니다.";
     }

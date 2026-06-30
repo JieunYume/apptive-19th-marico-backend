@@ -3,19 +3,24 @@ import com.apptive.marico.dto.AccountDto;
 import com.apptive.marico.dto.CareerDto;
 import com.apptive.marico.dto.stylist.*;
 import com.apptive.marico.dto.stylist.service.ServiceCategoryDto;
+import com.apptive.marico.dto.stylist.service.ServiceMatchingApproveDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceResponseDto;
 import com.apptive.marico.entity.*;
+import com.apptive.marico.entity.service.ServiceContent;
+import com.apptive.marico.entity.service.Service;
+import com.apptive.marico.entity.service.ServiceMatching;
+import com.apptive.marico.entity.service.ServiceSchedule;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.repository.*;
 import com.apptive.marico.service.auth.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,14 +28,17 @@ import java.util.stream.Collectors;
 
 import static com.apptive.marico.exception.ErrorCode.*;
 
-@Service
+@org.springframework.stereotype.Service
 @Transactional
 @RequiredArgsConstructor
 public class StylistMypageService {
     private final StylistRepository stylistRepository;
     private final CareerRepository careerRepository;
-    private final StylistServiceRepository serviceRepository;
+    private final ServiceRepository serviceRepository;
     private final ServiceCategoryRepository serviceCategoryRepository;
+    private final ServiceMatchingRepository serviceMatchingRepository;
+    private final ServiceScheduleRepository serviceScheduleRepository;
+    private final ReviewRepository reviewRepository;
     private final StyleRepository styleRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService customUserDetailsService;
@@ -79,7 +87,7 @@ public class StylistMypageService {
         Stylist stylist = stylistRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        List<StylistService> serviceList = serviceRepository.findAllByStylistId(stylist.getId());
+        List<Service> serviceList = serviceRepository.findAllByStylistId(stylist.getId());
 
         List<StylistServiceDto> stylistServiceDtoList = serviceList.stream()
                 .map(StylistServiceDto::toDto)
@@ -93,32 +101,22 @@ public class StylistMypageService {
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         if (serviceRepository.countByStylist_id(stylist.getId()) >= 5) throw new CustomException(TOO_MANY_SERVICES);
 
-
-        StylistService stylistService = StylistService.builder()
+        Service stylistService = Service.builder()
                 .serviceName(stylistServiceDto.getServiceName())
                 .serviceDescription(stylistServiceDto.getServiceDescription())
                 .price(stylistServiceDto.getPrice())
                 .stylist(stylist)
                 .build();
         serviceRepository.save(stylistService);
-        addServiceCategory(stylistServiceDto.getServiceCategoryDto(), stylistService);
+        stylistServiceDto.getServiceCategories()
+                .forEach(dto -> serviceCategoryRepository.save(createServiceCategory(dto, stylistService)));
         return "서비스가 등록되었습니다.";
-    }
-
-    private void addServiceCategory(ServiceCategoryDto serviceCategoryDto, StylistService stylistService) {
-        ServiceCategory serviceCategory = ServiceCategory.builder()
-                .serviceType(serviceCategoryDto.getServiceType())
-                .connectionType(serviceCategoryDto.getConnectionType())
-                .categoryDescription(serviceCategoryDto.getCategoryDescription())
-                .stylistService(stylistService)
-                .build();
-        serviceCategoryRepository.save(serviceCategory);
     }
 
     public StylistServiceDto getService(String userId, Long service_id) {
         Stylist stylist = stylistRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-        Optional<StylistService> service = serviceRepository.findServiceWithStylistById(service_id);
+        Optional<Service> service = serviceRepository.findServiceWithStylistById(service_id);
         if (service.isEmpty()) {
             throw new CustomException(SERVICE_NOT_FOUND);
         }
@@ -132,20 +130,77 @@ public class StylistMypageService {
         Optional<Stylist> stylist = stylistRepository.findByUserId(userId);
         if (stylist.isEmpty()) throw new CustomException(USER_NOT_FOUND);
 
-        Optional<StylistService> stylistService = serviceRepository.findServiceWithStylistById(serviceId);
+        Optional<Service> stylistService = serviceRepository.findServiceWithStylistById(serviceId);
         if (stylistService.isEmpty()) throw new CustomException(SERVICE_NOT_FOUND);
         if (!Objects.equals(stylistService.get().getStylist(), stylist.get())) throw new CustomException(STYLIST_NOT_MATCH_SERVICE);
 
         serviceCategoryRepository.deleteAllByStylistService(stylistService.get());
 
-        ServiceCategoryDto serviceCategoryDto = stylistServiceDto.getServiceCategoryDto();
-        serviceCategoryRepository.save(createServiceCategory(serviceCategoryDto, stylistService.get()));
+        stylistServiceDto.getServiceCategories()
+                .forEach(dto -> serviceCategoryRepository.save(createServiceCategory(dto, stylistService.get())));
         stylistService.get().editService(stylistServiceDto);
         return "서비스가 수정되었습니다.";
     }
 
-    private static ServiceCategory createServiceCategory(ServiceCategoryDto categoryDto, StylistService stylistService) {
-        return ServiceCategory.builder()
+    public String deleteService(String userId, Long serviceId) {
+        Stylist stylist = stylistRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        Service stylistService = serviceRepository.findServiceWithStylistById(serviceId)
+                .orElseThrow(() -> new CustomException(SERVICE_NOT_FOUND));
+        if (!Objects.equals(stylistService.getStylist(), stylist)) throw new CustomException(STYLIST_NOT_MATCH_SERVICE);
+
+        // 서비스에 달린 리뷰는 FK로 막혀 있어 서비스보다 먼저 지워야 하고,
+        // 지운 개수만큼 review_count 반정규화 값도 같이 줄여야 함
+        long deletedReviewCount = reviewRepository.countByStylistService_Id(serviceId);
+        reviewRepository.deleteAllByStylistService_Id(serviceId);
+
+        serviceCategoryRepository.deleteAllByStylistService(stylistService);
+        serviceRepository.delete(stylistService);
+
+        if (deletedReviewCount > 0) {
+            stylistRepository.addToReviewCount(stylist.getId(), (int) -deletedReviewCount);
+        }
+        return "서비스가 삭제되었습니다.";
+    }
+
+    public String approveMatching(String userId, Long matchingId, ServiceMatchingApproveDto dto) {
+        Stylist stylist = stylistRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        ServiceMatching matching = serviceMatchingRepository.findById(matchingId)
+                .orElseThrow(() -> new CustomException(STYLIST_MATCHING_NOT_FOUND));
+
+        if (!matching.getService().getStylist().getId().equals(stylist.getId())) {
+            throw new CustomException(STYLIST_NOT_MATCH_SERVICE);
+        }
+
+        matching.approval();
+
+        LocalDateTime now = LocalDateTime.now();
+        dto.getSchedules().forEach(item -> {
+            ServiceContent content = serviceCategoryRepository.findById(item.getServiceContentId())
+                    .orElseThrow(() -> new CustomException(SERVICE_CONTENT_NOT_FOUND));
+
+            if (!content.getStylistService().getId().equals(matching.getService().getId())) {
+                throw new CustomException(SERVICE_CONTENT_NOT_IN_SERVICE);
+            }
+
+            serviceScheduleRepository.save(ServiceSchedule.builder()
+                    .serviceMatching(matching)
+                    .serviceContent(content)
+                    .scheduledAt(item.getScheduledAt())
+                    .location(item.getLocation())
+                    .status("SCHEDULED")
+                    .createdAt(now)
+                    .build());
+        });
+
+        return "매칭이 승인되었습니다.";
+    }
+
+    private static ServiceContent createServiceCategory(ServiceCategoryDto categoryDto, Service stylistService) {
+        return ServiceContent.builder()
                 .serviceType(categoryDto.getServiceType())
                 .connectionType(categoryDto.getConnectionType())
                 .categoryDescription(categoryDto.getCategoryDescription())

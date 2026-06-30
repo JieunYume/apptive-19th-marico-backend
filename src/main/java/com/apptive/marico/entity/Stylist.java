@@ -2,6 +2,7 @@ package com.apptive.marico.entity;
 
 import com.apptive.marico.dto.AccountDto;
 import com.apptive.marico.dto.stylist.StylistMypageEditDto;
+import com.apptive.marico.entity.service.Service;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -79,10 +80,13 @@ public class Stylist implements UserDetails {
     private List<StylistNoticeReadStatus> noticeReadStatuses = new ArrayList<>();
 
     @OneToMany(mappedBy = "stylist", orphanRemoval = true)
-    private List<StylistService> stylistServices = new ArrayList<>();
+    private List<Service> stylistServices = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @Column(nullable = false)
+    private int reviewCount;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -38,12 +38,12 @@ public class HomeController {
     }
 
     // 스타일리스트 서비스 신청 조회
-    @GetMapping("/member/application/{service_id}")
+    @GetMapping("/member/matching/{service_id}")
     public ResponseEntity<?> loadService(Principal principal, @PathVariable Long service_id) {
         return ResponseEntity.ok(homeService.loadApplication(principal.getName(), service_id));
     }
     // 스타일리스트 서비스 신청 하기
-    @PostMapping("/member/application/{service_id}")
+    @PostMapping("/member/matching/{service_id}")
     public ResponseEntity<?> addRequestService(Principal principal, @PathVariable Long service_id) {
         return ResponseEntity.ok(ApiUtils.success(homeService.addApplication(principal.getName(), service_id)));
     }

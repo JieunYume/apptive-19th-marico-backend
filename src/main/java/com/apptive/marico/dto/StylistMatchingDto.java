@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ServiceApplicationDto {
+public class StylistMatchingDto {
 
     private AccountDto refundAccount;
     private AccountDto stylistAccount;

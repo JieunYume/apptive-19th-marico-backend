@@ -1,7 +1,7 @@
 package com.apptive.marico.entity;
 
 import com.apptive.marico.dto.AccountDto;
-import com.apptive.marico.entity.token.VerificationToken;
+import com.apptive.marico.entity.service.ServiceMatching;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -69,11 +69,8 @@ public class Member implements UserDetails {
 
     private String accountHolder;
 
-    @OneToOne(mappedBy = "member")
-    private ServiceApplication serviceApplication;
-
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
-    private List<Order> orders = new ArrayList<>();
+    private List<ServiceMatching> orderServices = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(

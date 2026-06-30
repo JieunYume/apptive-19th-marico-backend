@@ -1,75 +1,104 @@
 package com.apptive.marico.service;
 
 import com.apptive.marico.dto.RecommendStylistDto;
+import com.apptive.marico.dto.stylist.StylistSearchResultDto;
+import com.apptive.marico.dto.stylistService.StylistFilterDto;
 import com.apptive.marico.entity.Member;
 import com.apptive.marico.entity.Style;
 import com.apptive.marico.entity.Stylist;
+import com.apptive.marico.entity.service.Service;
+import com.apptive.marico.entity.service.ServiceMatching;
 import com.apptive.marico.exception.CustomException;
-import com.apptive.marico.exception.ErrorCode;
 import com.apptive.marico.repository.MemberRepository;
+import com.apptive.marico.repository.ServiceMatchingRepository;
+import com.apptive.marico.repository.ServiceRepository;
 import com.apptive.marico.repository.StylistRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.apptive.marico.exception.ErrorCode.SERVICE_NOT_FOUND;
 import static com.apptive.marico.exception.ErrorCode.USER_NOT_FOUND;
 
-@Service
+@org.springframework.stereotype.Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberHomeService {
     private final MemberRepository memberRepository;
     private final StylistRepository stylistRepository;
+    private final ServiceRepository serviceRepository;
+    private final ServiceMatchingRepository serviceMatchingRepository;
 
     public List<RecommendStylistDto> recommendStylist(String userId) {
         Member member = memberRepository.findByUserId(userId).orElseThrow(
                 () -> new CustomException(USER_NOT_FOUND));
 
-        // 모든 스타일리스트를 가져온다.
         List<Stylist> allStylists = stylistRepository.findAll();
-        if(allStylists.isEmpty()) return List.of();
+        if (allStylists.isEmpty()) return List.of();
 
-        // 각 스타일리스트에 대해 점수를 계산하고, 이를 기준으로 정렬한다.
         List<Stylist> sortedStylists = allStylists.stream()
                 .sorted(Comparator.comparing(stylist -> -calculateScore(member, stylist)))
                 .collect(Collectors.toList());
         System.out.println(sortedStylists.get(0) + ", " + sortedStylists.get(1));
 
-        // 추천 스타일리스트가 10명이 넘을 경우, 리스트 크기 조정
-        if(sortedStylists.size() > 10) {
+        if (sortedStylists.size() > 10) {
             sortedStylists = sortedStylists.subList(0, 10);
         }
 
-        // 추천 스타일리스트 정보를 RecommendStylistDto에 담아 반환
-        List<RecommendStylistDto> recommendStylistDtos = sortedStylists.stream()
+        return sortedStylists.stream()
                 .map(stylist -> new RecommendStylistDto(stylist.getId(), stylist.getProfileImage(), stylist.getOneLineIntroduction(), stylist.getStageName()))
                 .collect(Collectors.toList());
+    }
 
-        return recommendStylistDtos;
+    public Page<StylistSearchResultDto> searchStylist(StylistFilterDto filter, Pageable pageable) {
+        return stylistRepository.searchStylists(
+                nullToEmpty(filter.getStyle()),
+                nullToEmpty(filter.getCity()),
+                nullToEmpty(filter.getState()),
+                nullToEmpty(filter.getGender()),
+                pageable
+        ).map(StylistSearchResultDto::from);
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    @Transactional
+    public String applyService(String userId, Long serviceId) {
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new CustomException(SERVICE_NOT_FOUND));
+
+        serviceMatchingRepository.save(ServiceMatching.builder()
+                .member(member)
+                .service(service)
+                .price(service.getPrice())
+                .approvalStatus("READY")
+                .build());
+
+        return "서비스 신청이 완료되었습니다.";
     }
 
     private double calculateScore(Member member, Stylist stylist) {
         double score = 0;
 
-        // 선호 스타일이 일치하는 경우
         for (Style preferredStyle : member.getPreferredStyles()) {
             if (stylist.getStyles().contains(preferredStyle)) {
                 score += 10;
             }
         }
 
-        // 도시와 상태가 모두 일치하는 경우
-        if(Objects.equals(stylist.getCity(), member.getCity()) && Objects.equals(stylist.getState(), member.getState())) {
+        if (Objects.equals(stylist.getCity(), member.getCity()) && Objects.equals(stylist.getState(), member.getState())) {
             score += 5;
-        }
-        // 도시만 일치하는 경우
-        else if (Objects.equals(stylist.getCity(), member.getCity())) {
+        } else if (Objects.equals(stylist.getCity(), member.getCity())) {
             score += 2.5;
         }
         return score;

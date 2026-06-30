@@ -1,8 +1,7 @@
 package com.apptive.marico.dto.stylistService;
 
 
-import com.apptive.marico.dto.stylist.StyleDto;
-import com.apptive.marico.entity.ServiceInquiry;
+import com.apptive.marico.entity.service.ServiceInquiry;
 import lombok.Builder;
 import lombok.Getter;
 

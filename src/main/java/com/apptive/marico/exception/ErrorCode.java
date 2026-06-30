@@ -13,6 +13,8 @@ public enum ErrorCode {
     INVALID_NICKNAME(400, "닉네임은 한글, 영문, 숫자 중 2~10자 이내이어야 합니다."),
     ID_OR_PASSWORD_NOT_MATCH(400, "아이디 혹은 비밀번호가 틀렸습니다."),
     USER_AND_INQUIRY_NOT_MATCH(400, "등록하신 문의사항이 아닙니다."),
+    MATCHING_NOT_DONE(400, "승인 완료된 매칭이 아닙니다."),
+    SERVICE_CONTENT_NOT_IN_SERVICE(400, "해당 서비스에 속하지 않는 서비스 항목입니다."),
     PREFERRED_STYLE_IMAGE_NOT_EXIST(404, "이미지 파일이 존재하지 않습니다."),
     BODYSHAPE_IMAGE_NOT_EXIST(404, "체형 이미지 파일이 존재하지 않습니다."),
 
@@ -23,12 +25,14 @@ public enum ErrorCode {
 
     //403 Forbidden 요청이 이해되었지만 서버가 요청을 거부했음
     TOO_MANY_SERVICES(403, "등록할 수 있는 서비스 갯수를 초과했습니다."),
+    MATCHING_MEMBER_NOT_MATCH(403, "해당 매칭에 대한 권한이 없습니다."),
 
     //404 NOT_FOUND 잘못된 리소스 접근
+    SERVICE_CONTENT_NOT_FOUND(404, "존재하지 않는 서비스 항목입니다."),
     EMAIL_NOT_FOUND(404, "존재하지 않는 이메일입니다."),
     USER_NOT_FOUND(404, "존재하지 않는 회원입니다."),
-    SERVICE_APPLICATION_NOT_FOUND(404, "존재하지 않는 서비스 신청 내역입니다."),
-    SERVICE_APPLICATION_NOT_WAITING(404, "대기 중인 서비스 신청 내역이 아닙니다."),
+    STYLIST_MATCHING_NOT_FOUND(404, "존재하지 않는 매칭 내역입니다."),
+    STYLIST_MATCHING_NOT_WAITING(404, "대기 중인 매칭 내역이 아닙니다."),
     NO_PERSONAL_STYLIST(404, "담당 스타일리스트가 없습니다."),
     NO_MY_CLIENT(404, "담당 고객이 없습니다."),
     STYLIST_NOT_FOUND(404, "존재하지 않는 스타일리스트입니다."),
@@ -41,14 +45,18 @@ public enum ErrorCode {
     TOKEN_NOT_FOUND(404, "존재하지 않는 TOKEN입니다."),
     VALID_ACCESS_TOKEN(404, "ACCESS TOKEN이 존재하지 않거나 기한이 초과하지 않았습니다."),
     INQUIRY_NOT_FOUND(404, "존재하지 않는 문의사항입니다."),
+    REVIEW_NOT_FOUND(404, "존재하지 않는 리뷰입니다."),
 
     //409 CONFLICT 중복된 리소스
     ALREADY_SAVED_EMAIL(409, "이미 저장된 이메일입니다."),
     ALREADY_SAVED_ID(409, "이미 저장된 아이디입니다."),
     ALREADY_SAVED_NICKNAME(409, "이미 저장된 닉네임입니다."),
+    SCHEDULE_ALREADY_EXISTS(409, "이미 예약된 스케줄이 존재합니다."),
 
     //419 Authentication Timeout
     VERIFICATION_CODE_TIMEOUT(419, "발급 코드의 인증 시간이 초과 되었습니다."),
+
+    KAKAO_PAY_FAILED(500, "카카오페이 결제 처리에 실패했습니다."),
 
     //500 INTERNAL SERVER ERROR
     INTERNAL_SERVER_ERROR(500, "서버 에러입니다. 서버 팀에 연락주세요!"),

@@ -10,5 +10,6 @@ public class StylistFilterDto {
 
     private String style;
     private String city;
+    private String state;
     private String gender;
 }
