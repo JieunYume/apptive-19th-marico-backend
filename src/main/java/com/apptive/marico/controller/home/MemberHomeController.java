@@ -1,4 +1,4 @@
-package com.apptive.marico.controller;
+package com.apptive.marico.controller.home;
 
 import com.apptive.marico.dto.stylistService.StylistFilterDto;
 import com.apptive.marico.service.MemberHomeService;

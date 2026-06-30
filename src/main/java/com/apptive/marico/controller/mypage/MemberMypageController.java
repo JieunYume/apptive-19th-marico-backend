@@ -1,4 +1,4 @@
-package com.apptive.marico.controller;
+package com.apptive.marico.controller.mypage;
 
 import com.apptive.marico.dto.AccountDto;
 import com.apptive.marico.dto.findId.SendEmailRequestDto;

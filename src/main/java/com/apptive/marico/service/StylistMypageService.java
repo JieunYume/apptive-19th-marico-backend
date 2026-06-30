@@ -3,7 +3,6 @@ import com.apptive.marico.dto.AccountDto;
 import com.apptive.marico.dto.CareerDto;
 import com.apptive.marico.dto.stylist.*;
 import com.apptive.marico.dto.stylist.service.ServiceCategoryDto;
-import com.apptive.marico.dto.stylist.service.ServiceMatchingApproveDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceResponseDto;
 import com.apptive.marico.entity.*;
@@ -35,7 +34,7 @@ public class StylistMypageService {
     private final StylistRepository stylistRepository;
     private final CareerRepository careerRepository;
     private final ServiceRepository serviceRepository;
-    private final ServiceCategoryRepository serviceCategoryRepository;
+    private final ServiceContentRepository serviceCategoryRepository;
     private final ServiceMatchingRepository serviceMatchingRepository;
     private final ServiceScheduleRepository serviceScheduleRepository;
     private final ReviewRepository reviewRepository;
@@ -164,7 +163,7 @@ public class StylistMypageService {
         return "서비스가 삭제되었습니다.";
     }
 
-    public String approveMatching(String userId, Long matchingId, ServiceMatchingApproveDto dto) {
+    public String approveMatching(String userId, Long matchingId) {
         Stylist stylist = stylistRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
@@ -178,23 +177,14 @@ public class StylistMypageService {
         matching.approval();
 
         LocalDateTime now = LocalDateTime.now();
-        dto.getSchedules().forEach(item -> {
-            ServiceContent content = serviceCategoryRepository.findById(item.getServiceContentId())
-                    .orElseThrow(() -> new CustomException(SERVICE_CONTENT_NOT_FOUND));
-
-            if (!content.getStylistService().getId().equals(matching.getService().getId())) {
-                throw new CustomException(SERVICE_CONTENT_NOT_IN_SERVICE);
-            }
-
-            serviceScheduleRepository.save(ServiceSchedule.builder()
-                    .serviceMatching(matching)
-                    .serviceContent(content)
-                    .scheduledAt(item.getScheduledAt())
-                    .location(item.getLocation())
-                    .status("SCHEDULED")
-                    .createdAt(now)
-                    .build());
-        });
+        matching.getService().getServiceCategories().forEach(content ->
+                serviceScheduleRepository.save(ServiceSchedule.builder()
+                        .serviceMatching(matching)
+                        .serviceContent(content)
+                        .status("SCHEDULED")
+                        .createdAt(now)
+                        .build())
+        );
 
         return "매칭이 승인되었습니다.";
     }

@@ -34,7 +34,6 @@ public class ServiceScheduleResponseDto {
                 .serviceType(schedule.getServiceContent().getServiceType())
                 .connectionType(schedule.getServiceContent().getConnectionType())
                 .scheduledAt(schedule.getScheduledAt())
-                .location(schedule.getLocation())
                 .status(schedule.getStatus())
                 .createdAt(schedule.getCreatedAt())
                 .build();

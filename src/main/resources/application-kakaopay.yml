@@ -5,3 +5,6 @@ kakao:
     approval-url: http://localhost:8080/api/payment/kakao/success
     fail-url: http://localhost:8080/api/payment/kakao/fail
     cancel-url: http://localhost:8080/api/payment/kakao/cancel
+  alimtalk:
+    sender-key: ${KAKAO_SENDER_KEY:}
+    template-code: ${KAKAO_ALIMTALK_TEMPLATE_CODE:}

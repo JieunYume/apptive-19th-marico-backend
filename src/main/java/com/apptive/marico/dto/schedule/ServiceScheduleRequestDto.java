@@ -13,7 +13,11 @@ import java.time.LocalDateTime;
 public class ServiceScheduleRequestDto {
 
     @NotNull
-    private LocalDateTime scheduledAt;
+    private Long matchingId;
 
-    private String location;
+    @NotNull
+    private Long serviceContentId;
+
+    @NotNull
+    private LocalDateTime scheduledAt;
 }

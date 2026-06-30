@@ -1,4 +1,4 @@
-package com.apptive.marico.controller;
+package com.apptive.marico.controller.mypage;
 
 import com.apptive.marico.dto.AccountDto;
 import com.apptive.marico.dto.findId.SendEmailRequestDto;
@@ -7,7 +7,6 @@ import com.apptive.marico.dto.stylist.DeleteStyleDto;
 import com.apptive.marico.dto.stylist.StyleDto;
 import com.apptive.marico.dto.stylist.StylistMypageDto;
 import com.apptive.marico.dto.stylist.StylistMypageEditDto;
-import com.apptive.marico.dto.stylist.service.ServiceMatchingApproveDto;
 import com.apptive.marico.dto.stylist.service.StylistServiceDto;
 import com.apptive.marico.dto.verificationToken.SendEmailResponseDto;
 import com.apptive.marico.service.StylistMypageService;
@@ -120,17 +119,17 @@ public class StylistMypageController {
     }
 
     @PatchMapping("/matching/{matchingId}/approve")
-    public ResponseEntity<?> approveMatching(Principal principal, @PathVariable Long matchingId, @RequestBody ServiceMatchingApproveDto dto) {
-        return ResponseEntity.ok(ApiUtils.success(stylistMypageService.approveMatching(principal.getName(), matchingId, dto)));
+    public ResponseEntity<?> approveMatching(Principal principal, @PathVariable Long matchingId) {
+        return ResponseEntity.ok(ApiUtils.success(stylistMypageService.approveMatching(principal.getName(), matchingId)));
     }
 
     @GetMapping("/account")
     public ResponseEntity<?> loadAccount(Principal principal) {
         return ResponseEntity.ok(ApiUtils.success(stylistMypageService.loadAccount(principal.getName())));
     }
+
     @PostMapping("/account")
     public ResponseEntity<?> addAccount(Principal principal, @RequestBody AccountDto accountDto) {
         return ResponseEntity.ok(ApiUtils.success(stylistMypageService.addAccount(principal.getName(), accountDto)));
     }
-
 }

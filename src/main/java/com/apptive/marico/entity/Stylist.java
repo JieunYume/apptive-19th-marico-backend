@@ -64,6 +64,8 @@ public class Stylist implements UserDetails {
 
     private String chat_link;
 
+    private String phoneNumber;
+
     private String bank;
 
     private String accountNumber;

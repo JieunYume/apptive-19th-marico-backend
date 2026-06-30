@@ -25,7 +25,6 @@ public class ServiceSchedule {
     private ServiceContent serviceContent;
 
     private LocalDateTime scheduledAt;
-    private String location;
     private String status; // SCHEDULED, COMPLETED, CANCELLED
     private LocalDateTime createdAt;
 }

@@ -9,7 +9,7 @@ import com.apptive.marico.entity.service.ServiceSchedule;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.repository.MemberRepository;
 import com.apptive.marico.repository.ServiceMatchingRepository;
-import com.apptive.marico.repository.ServiceCategoryRepository;
+import com.apptive.marico.repository.ServiceContentRepository;
 import com.apptive.marico.repository.ServiceScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,15 +25,16 @@ public class ServiceScheduleService {
 
     private final MemberRepository memberRepository;
     private final ServiceMatchingRepository orderServiceRepository;
-    private final ServiceCategoryRepository serviceCategoryRepository;
+    private final ServiceContentRepository serviceCategoryRepository;
     private final ServiceScheduleRepository serviceScheduleRepository;
+    private final SmtpEmailService smtpEmailService;
 
     @Transactional
-    public ServiceScheduleResponseDto bookSchedule(String userId, Long matchingId, Long serviceContentId, ServiceScheduleRequestDto dto) {
+    public ServiceScheduleResponseDto bookSchedule(String userId, ServiceScheduleRequestDto dto) {
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        ServiceMatching matching = orderServiceRepository.findById(matchingId)
+        ServiceMatching matching = orderServiceRepository.findById(dto.getMatchingId())
                 .orElseThrow(() -> new CustomException(STYLIST_MATCHING_NOT_FOUND));
 
         if (!matching.getMember().getId().equals(member.getId())) {
@@ -44,7 +45,7 @@ public class ServiceScheduleService {
             throw new CustomException(MATCHING_NOT_DONE);
         }
 
-        ServiceContent serviceContent = serviceCategoryRepository.findById(serviceContentId)
+        ServiceContent serviceContent = serviceCategoryRepository.findById(dto.getServiceContentId())
                 .orElseThrow(() -> new CustomException(SERVICE_CONTENT_NOT_FOUND));
 
         if (!serviceContent.getStylistService().getId().equals(matching.getService().getId())) {
@@ -59,11 +60,20 @@ public class ServiceScheduleService {
                 .serviceMatching(matching)
                 .serviceContent(serviceContent)
                 .scheduledAt(dto.getScheduledAt())
-                .location(dto.getLocation())
                 .status("SCHEDULED")
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return ServiceScheduleResponseDto.from(serviceScheduleRepository.save(schedule));
+        ServiceScheduleResponseDto response = ServiceScheduleResponseDto.from(serviceScheduleRepository.save(schedule));
+
+        String stylistEmail = matching.getService().getStylist().getEmail();
+        smtpEmailService.sendScheduleNotification(
+                stylistEmail,
+                member.getName(),
+                matching.getService().getServiceName(),
+                dto.getScheduledAt()
+        );
+
+        return response;
     }
 }
