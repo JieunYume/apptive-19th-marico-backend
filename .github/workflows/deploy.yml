@@ -38,18 +38,56 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and push Docker image # 도커 파일 생성 및 업로드
+      - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
 
-      - name: Deploy to EC2 using SSM
+      - name: Prepare deployment bundle
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
+          cat > deploy.env <<EOF
+          ECR_IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          DB_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+          MYSQL_USER=portfolio_user
+          MYSQL_PASSWORD=${{ secrets.RDS_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          AWS_S3_REGION=ap-northeast-2
+          AWS_S3_BUCKET=maricobucket
+          AWS_S3_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_S3_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EOF
+
+          echo "COMPOSE_B64=$(base64 -w0 docker-compose.yml)" >> $GITHUB_ENV
+          echo "PROM_B64=$(base64 -w0 prometheus.yml)" >> $GITHUB_ENV
+          echo "ENV_B64=$(base64 -w0 deploy.env)" >> $GITHUB_ENV
+
+      - name: Deploy monitoring stack to EC2 via SSM
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          COMMANDS=$(jq -n \
+            --arg compose "$COMPOSE_B64" \
+            --arg prom "$PROM_B64" \
+            --arg env "$ENV_B64" \
+            --arg registry "$ECR_REGISTRY" \
+            '[
+              "set -e",
+              "mkdir -p /home/ubuntu/app",
+              ("echo " + $compose + " | base64 -d > /home/ubuntu/app/docker-compose.yml"),
+              ("echo " + $prom + " | base64 -d > /home/ubuntu/app/prometheus.yml"),
+              ("echo " + $env + " | base64 -d > /home/ubuntu/app/.env"),
+              "chown -R ubuntu:ubuntu /home/ubuntu/app",
+              ("aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin " + $registry),
+              "cd /home/ubuntu/app && docker compose pull app && docker compose up -d"
+            ]')
+
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters '{"commands": ["docker stop portfolio-app || true", "docker rm portfolio-app || true", "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}", "docker run -d --name portfolio-app -p 8080:8080 -e JAVA_OPTS=-Xmx256m -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_USERNAME=portfolio_user -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} -e JWT_SECRET=${{ secrets.JWT_SECRET }} -e SPRING_MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} -e CLOUD_AWS_CREDENTIALS_ACCESSKEY=${{ secrets.AWS_ACCESS_KEY_ID }} -e CLOUD_AWS_CREDENTIALS_SECRETKEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"]}'
+            --comment "Deploy docker-compose stack (app+prometheus+grafana+redis)" \
+            --parameters "{\"commands\": $COMMANDS}"
