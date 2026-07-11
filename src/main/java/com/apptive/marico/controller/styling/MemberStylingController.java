@@ -1,10 +1,10 @@
 package com.apptive.marico.controller.styling;
 
+import com.apptive.marico.ServiceScheduleFacade;
 import com.apptive.marico.dto.schedule.ServiceScheduleRequestDto;
 import com.apptive.marico.dto.styling.MemberBasicInformationDto;
 import com.apptive.marico.exception.CustomException;
 import com.apptive.marico.service.ImageUploadService;
-import com.apptive.marico.service.ServiceScheduleService;
 import com.apptive.marico.service.styling.MemberStylingService;
 import com.apptive.marico.utils.ApiUtils;
 import jakarta.validation.Valid;
@@ -26,7 +26,7 @@ import static com.apptive.marico.exception.ErrorCode.BODYSHAPE_IMAGE_NOT_EXIST;
 public class MemberStylingController {
     private final MemberStylingService memberStylingService;
     private final ImageUploadService imageUploadService;
-    private final ServiceScheduleService serviceScheduleService;
+    private final ServiceScheduleFacade serviceScheduleFacade;
 
     // 담당 스타일리스트 조회
     @GetMapping("/")
@@ -72,7 +72,7 @@ public class MemberStylingController {
             @Valid @RequestBody ServiceScheduleRequestDto dto
     ) {
         return ResponseEntity.ok(new ApiUtils.ApiSuccess<>(
-                serviceScheduleService.bookSchedule(principal.getName(), dto)
+                serviceScheduleFacade.improvedBookSchedule(principal.getName(), dto)
         ));
     }
 }
